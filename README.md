@@ -13,3 +13,8 @@ for data in search(KEYWORDS, tld='com.vn', lang='vi', stop=10):
 
 print data
 ```
+
+
+
+------------------------
+Thanks for https://pypi.python.org/pypi/google
