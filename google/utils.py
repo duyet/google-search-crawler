@@ -57,7 +57,7 @@ def get_random_user_agent(user_agents: list[str] | None = None) -> str:
     if not user_agents:
         return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 
-    return random.choice(user_agents)
+    return random.choice(user_agents)  # nosec B311 - not used for cryptographic purposes
 
 
 def filter_result(link: str) -> str | None:
