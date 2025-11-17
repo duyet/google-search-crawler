@@ -87,3 +87,32 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pytest
+.pytest_cache/
+*.pytest_cache
+
+# Pre-commit
+.pre-commit-config.yaml.bak
+
+# Google crawler specific
+.google-cookie
+results/*.json
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
