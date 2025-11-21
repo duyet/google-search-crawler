@@ -2,12 +2,7 @@
 
 from pathlib import Path
 
-from google.utils import (
-    build_search_url,
-    filter_result,
-    get_random_user_agent,
-    load_user_agents,
-)
+from google.utils import build_search_url, filter_result, get_random_user_agent, load_user_agents
 
 
 class TestLoadUserAgents:

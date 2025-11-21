@@ -39,12 +39,7 @@ from urllib.parse import quote_plus
 
 import requests
 from bs4 import BeautifulSoup
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from google.config import Config, get_config
 from google.exceptions import (

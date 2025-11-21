@@ -7,12 +7,7 @@ import pytest
 # Import private function for testing
 import google
 from google import SearchResult, lucky, search, search_images
-from google.exceptions import (
-    HTTPError,
-    InvalidParameterError,
-    RateLimitError,
-    SearchError,
-)
+from google.exceptions import HTTPError, InvalidParameterError, RateLimitError, SearchError
 
 _parse_search_results = google._parse_search_results
 
