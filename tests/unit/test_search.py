@@ -1,15 +1,23 @@
 """Tests for search functionality."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 # Import private function for testing
 import google
 from google import SearchResult, lucky, search, search_images
-from google.exceptions import HTTPError, InvalidParameterError, RateLimitError, SearchError
+from google.exceptions import (
+    BlockedError,
+    HTTPError,
+    InvalidParameterError,
+    RateLimitError,
+    SearchError,
+)
 
 _parse_search_results = google._parse_search_results
+_get_page = google._get_page
 
 
 class TestParseSearchResults:
@@ -150,3 +158,106 @@ class TestLucky:
 
         with pytest.raises(SearchError, match="No results found"):
             lucky("test query")
+
+
+class TestGetPage:
+    """Test _get_page function."""
+
+    @patch("google.requests.Session")
+    @patch("google._cookie_jar")
+    def test_successful_get(self, mock_jar, mock_session_cls):
+        """Test successful page fetch."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.text = "<html>content</html>"
+        mock_session = MagicMock()
+        mock_session.get.return_value = mock_response
+        mock_session_cls.return_value = mock_session
+
+        result = _get_page("https://example.com", user_agent="TestAgent/1.0")
+
+        assert result == "<html>content</html>"
+        mock_session.get.assert_called_once()
+
+    @patch("google.requests.Session")
+    @patch("google._cookie_jar")
+    def test_rate_limit_raises(self, mock_jar, mock_session_cls):
+        """Test that HTTP 429 raises RateLimitError."""
+        mock_response = MagicMock()
+        mock_response.status_code = 429
+        mock_session = MagicMock()
+        mock_session.get.return_value = mock_response
+        mock_session_cls.return_value = mock_session
+
+        with pytest.raises(RateLimitError):
+            _get_page("https://example.com", user_agent="TestAgent/1.0")
+
+    @patch("google.requests.Session")
+    @patch("google._cookie_jar")
+    def test_blocked_raises(self, mock_jar, mock_session_cls):
+        """Test that HTTP 403 raises BlockedError."""
+        mock_response = MagicMock()
+        mock_response.status_code = 403
+        mock_session = MagicMock()
+        mock_session.get.return_value = mock_response
+        mock_session_cls.return_value = mock_session
+
+        with pytest.raises(BlockedError):
+            _get_page("https://example.com", user_agent="TestAgent/1.0")
+
+    @patch("google.requests.Session")
+    @patch("google._cookie_jar")
+    def test_timeout_raises_http_error(self, mock_jar, mock_session_cls):
+        """Test that Timeout raises HTTPError."""
+        mock_session = MagicMock()
+        mock_session.get.side_effect = requests.Timeout("timed out")
+        mock_session_cls.return_value = mock_session
+
+        with pytest.raises(HTTPError, match="Request timeout"):
+            _get_page("https://example.com", user_agent="TestAgent/1.0")
+
+    @patch("google.requests.Session")
+    @patch("google._cookie_jar")
+    def test_connection_error_raises_http_error(self, mock_jar, mock_session_cls):
+        """Test that ConnectionError raises HTTPError."""
+        mock_session = MagicMock()
+        mock_session.get.side_effect = requests.ConnectionError("refused")
+        mock_session_cls.return_value = mock_session
+
+        with pytest.raises(HTTPError, match="Connection error"):
+            _get_page("https://example.com", user_agent="TestAgent/1.0")
+
+    @patch("google.requests.Session")
+    @patch("google._cookie_jar")
+    def test_http_error_raises(self, mock_jar, mock_session_cls):
+        """Test that HTTP error response raises HTTPError."""
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        http_error = requests.HTTPError("server error")
+        http_error.response = mock_response
+        mock_session = MagicMock()
+        mock_session.get.return_value = mock_response
+        mock_response.raise_for_status.side_effect = http_error
+        mock_session_cls.return_value = mock_session
+
+        with pytest.raises(HTTPError):
+            _get_page("https://example.com", user_agent="TestAgent/1.0")
+
+    @patch("google.requests.Session")
+    @patch("google._cookie_jar")
+    def test_random_user_agent_used_when_none(self, mock_jar, mock_session_cls):
+        """Test that a random user agent is selected when none provided."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.text = "<html></html>"
+        mock_session = MagicMock()
+        mock_session.get.return_value = mock_response
+        mock_session_cls.return_value = mock_session
+
+        result = _get_page("https://example.com")
+
+        assert result == "<html></html>"
+        # Verify a User-Agent was set in headers
+        call_kwargs = mock_session.get.call_args
+        headers = call_kwargs[1]["headers"] if "headers" in call_kwargs[1] else call_kwargs[0][1]
+        assert "User-Agent" in headers

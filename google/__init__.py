@@ -30,6 +30,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from http.cookiejar import LWPCookieJar
@@ -161,6 +163,9 @@ def _get_page(url: str, user_agent: str | None = None, timeout: int = 10) -> str
         logger.debug(f"Successfully fetched {len(response.text)} bytes")
 
         return response.text
+
+    except (RateLimitError, BlockedError):
+        raise
 
     except requests.Timeout as e:
         logger.error(f"Request timeout: {e}")

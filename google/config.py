@@ -1,5 +1,7 @@
 """Configuration management for Google Search Crawler."""
 
+from __future__ import annotations
+
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -70,7 +72,7 @@ class Config:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     @classmethod
-    def from_yaml(cls, path: str | Path) -> "Config":
+    def from_yaml(cls, path: str | Path) -> Config:
         """Load configuration from a YAML file.
 
         Args:
@@ -93,7 +95,7 @@ class Config:
         return cls(**data)
 
     @classmethod
-    def from_env(cls) -> "Config":
+    def from_env(cls) -> Config:
         """Load configuration from environment variables.
 
         Environment variables should be prefixed with GOOGLE_CRAWLER_

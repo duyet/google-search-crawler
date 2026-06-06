@@ -1,5 +1,7 @@
 """Custom exceptions for the Google Search Crawler."""
 
+from __future__ import annotations
+
 
 class GoogleSearchError(Exception):
     """Base exception for all Google Search Crawler errors."""
